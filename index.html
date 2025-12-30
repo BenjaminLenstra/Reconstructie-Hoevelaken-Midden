@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet.photon.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet.photon.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="data/Wegen_2.js"></script>
+        <script src="data/Wegbreedte_3.js"></script>
+        <script src="data/Ontwerp_4.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: 'rgba(255, 255, 0, 1.00)',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: 'rgba(255, 255, 0, 1.00)',
+                fillOpacity: 1
+              });
+            }
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[52.16609252779677,5.452114712731785],[52.1754494620498,5.477674900588827]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // modify popup if contains media
+        function addClassToPopupIfMedia(content, popup) {
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            var imgTd = tempDiv.querySelector('td img');
+            if (imgTd) {
+                var src = imgTd.getAttribute('src');
+                if (/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)) {
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp3|wav|ogg|aac)$/i.test(src)) {
+                    var audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.src = src;
+                    imgTd.parentNode.replaceChild(audio, imgTd);
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp4|webm|ogg|mov)$/i.test(src)) {
+                    var video = document.createElement('video');
+                    video.controls = true;
+                    video.src = src;
+                    video.style.width = "400px";
+                    video.style.height = "300px";
+                    video.style.maxHeight = "60vh";
+                    video.style.maxWidth = "60vw";
+                    imgTd.parentNode.replaceChild(video, imgTd);
+                    popup._contentNode.classList.add('media');
+                    // Aggiorna il popup quando il video carica i metadati
+                    video.addEventListener('loadedmetadata', function() {
+                        popup.update();
+                    });
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else {
+                    popup._contentNode.classList.remove('media');
+                }
+            } else {
+                popup._contentNode.classList.remove('media');
+            }
+        }
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_CartoDbPositron_0');
+        map.getPane('pane_CartoDbPositron_0').style.zIndex = 400;
+        var layer_CartoDbPositron_0 = L.tileLayer('http://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+            pane: 'pane_CartoDbPositron_0',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_CartoDbPositron_0;
+        map.addLayer(layer_CartoDbPositron_0);
+        map.createPane('pane_GoogleSatellite_1');
+        map.getPane('pane_GoogleSatellite_1').style.zIndex = 401;
+        var layer_GoogleSatellite_1 = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleSatellite_1',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_GoogleSatellite_1;
+        map.addLayer(layer_GoogleSatellite_1);
+        function pop_Wegen_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="weggebruiker" colspan="2"><strong>weggebruiker</strong><br />' + (feature.properties['weggebruiker'] !== null ? autolinker.link(String(feature.properties['weggebruiker']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="huidig materiaal" colspan="2"><strong>huidig materiaal</strong><br />' + (feature.properties['huidig materiaal'] !== null ? autolinker.link(String(feature.properties['huidig materiaal']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="wegfunctie" colspan="2"><strong>wegfunctie</strong><br />' + (feature.properties['wegfunctie'] !== null ? autolinker.link(String(feature.properties['wegfunctie']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="wegcategorisering" colspan="2"><strong>wegcategorisering</strong><br />' + (feature.properties['wegcategorisering'] !== null ? autolinker.link(String(feature.properties['wegcategorisering']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="wegtype" colspan="2"><strong>wegtype</strong><br />' + (feature.properties['wegtype'] !== null ? autolinker.link(String(feature.properties['wegtype']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="categorie wegbreedte CROW" colspan="2"><strong>categorie wegbreedte CROW</strong><br />' + (feature.properties['categorie wegbreedte CROW'] !== null ? autolinker.link(String(feature.properties['categorie wegbreedte CROW']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="snelheid" colspan="2"><strong>snelheid</strong><br />' + (feature.properties['snelheid'] !== null ? autolinker.link(String(feature.properties['snelheid']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="jaar van aanleg" colspan="2"><strong>jaar van aanleg</strong><br />' + (feature.properties['jaar van aanleg'] !== null ? autolinker.link(String(feature.properties['jaar van aanleg']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Wegen_2_0(feature) {
+            switch(String(feature.properties['wegfunctie'])) {
+                case 'Fietspad':
+                    return {
+                pane: 'pane_Wegen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(229,71,73,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Parkeerstrook':
+                    return {
+                pane: 'pane_Wegen_2',
+                opacity: 1,
+                color: 'rgba(247,247,247,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(150,150,150,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Parkeerterrein':
+                    return {
+                pane: 'pane_Wegen_2',
+                opacity: 1,
+                color: 'rgba(247,247,247,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(150,150,150,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Parkeervak':
+                    return {
+                pane: 'pane_Wegen_2',
+                opacity: 1,
+                color: 'rgba(247,247,247,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(150,150,150,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Rijbaan':
+                    return {
+                pane: 'pane_Wegen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Verkeersdrempel':
+                    return {
+                pane: 'pane_Wegen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Voetgangersgebied':
+                    return {
+                pane: 'pane_Wegen_2',
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(106,106,106,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Voetpad':
+                    return {
+                pane: 'pane_Wegen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(106,106,106,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Wegen_2');
+        map.getPane('pane_Wegen_2').style.zIndex = 402;
+        map.getPane('pane_Wegen_2').style['mix-blend-mode'] = 'normal';
+        var layer_Wegen_2 = new L.geoJson(json_Wegen_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Wegen_2',
+            layerName: 'layer_Wegen_2',
+            pane: 'pane_Wegen_2',
+            onEachFeature: pop_Wegen_2,
+            style: style_Wegen_2_0,
+        });
+        bounds_group.addLayer(layer_Wegen_2);
+        map.addLayer(layer_Wegen_2);
+        function pop_Wegbreedte_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="categorie wegbreedte CROW" colspan="2"><strong>categorie wegbreedte CROW</strong><br />' + (feature.properties['categorie wegbreedte CROW'] !== null ? autolinker.link(String(feature.properties['categorie wegbreedte CROW']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Wegbreedte_3_0(feature) {
+            switch(String(feature.properties['categorie wegbreedte CROW'])) {
+                default:
+                    return {
+                pane: 'pane_Wegbreedte_3',
+                opacity: 1,
+                color: 'rgba(247,247,247,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(150,150,150,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '< 4,5 meter':
+                    return {
+                pane: 'pane_Wegbreedte_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,0,25,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4,5 - 5,5 meter':
+                    return {
+                pane: 'pane_Wegbreedte_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(237,255,0,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '> 5,5 meter':
+                    return {
+                pane: 'pane_Wegbreedte_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(15,255,28,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Wegbreedte_3');
+        map.getPane('pane_Wegbreedte_3').style.zIndex = 403;
+        map.getPane('pane_Wegbreedte_3').style['mix-blend-mode'] = 'normal';
+        var layer_Wegbreedte_3 = new L.geoJson(json_Wegbreedte_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Wegbreedte_3',
+            layerName: 'layer_Wegbreedte_3',
+            pane: 'pane_Wegbreedte_3',
+            onEachFeature: pop_Wegbreedte_3,
+            style: style_Wegbreedte_3_0,
+        });
+        bounds_group.addLayer(layer_Wegbreedte_3);
+        map.addLayer(layer_Wegbreedte_3);
+        function pop_Ontwerp_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="advies" colspan="2"><strong>advies</strong><br />' + (feature.properties['advies'] !== null ? autolinker.link(String(feature.properties['advies']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="huidig materiaal" colspan="2"><strong>huidig materiaal</strong><br />' + (feature.properties['huidig materiaal'] !== null ? autolinker.link(String(feature.properties['huidig materiaal']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="maatregel" colspan="2"><strong>maatregel</strong><br />' + (feature.properties['maatregel'] !== null ? autolinker.link(String(feature.properties['maatregel']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['maatregel 2'] !== null ? autolinker.link(String(feature.properties['maatregel 2']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="nieuw materiaal" colspan="2"><strong>nieuw materiaal</strong><br />' + (feature.properties['nieuw materiaal'] !== null ? autolinker.link(String(feature.properties['nieuw materiaal']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="huidig beeld" colspan="2"><strong>huidig beeld</strong><br />' + (feature.properties['huidig beeld'] !== null ? autolinker.link(String(feature.properties['huidig beeld']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="beeld" colspan="2"><strong>beeld</strong><br />' + (feature.properties['beeld'] !== null ? '<img src="images/' + String(feature.properties['beeld']).replace(/[\\/:]/g, '_').trim().replace(/'/g, '\'').replace(/"/g, '&quot;') + '">' : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="wegfunctie" colspan="2"><strong>wegfunctie</strong><br />' + (feature.properties['wegfunctie'] !== null ? autolinker.link(String(feature.properties['wegfunctie']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Ontwerp_4_0(feature) {
+            switch(String(feature.properties['maatregel'])) {
+                case 'Aanleg fietspad':
+                    return {
+                pane: 'pane_Ontwerp_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,175,22,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Fietsstraat in asfalt':
+                    return {
+                pane: 'pane_Ontwerp_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(204,51,51,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Fietsstraat in klinkers':
+                    return {
+                pane: 'pane_Ontwerp_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(132,51,51,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Instellen schoolzone':
+                    return {
+                pane: 'pane_Ontwerp_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 3.0, 
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Trottoir verwijderen':
+                    return {
+                pane: 'pane_Ontwerp_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(0,0,0,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Verwijderen parkeerstrook':
+                    return {
+                pane: 'pane_Ontwerp_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(43,145,173,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Vervangen verharding':
+                    return {
+                pane: 'pane_Ontwerp_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(0,255,88,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_Ontwerp_4',
+                opacity: 1,
+                color: 'rgba(247,247,247,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(150,150,150,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Ontwerp_4');
+        map.getPane('pane_Ontwerp_4').style.zIndex = 404;
+        map.getPane('pane_Ontwerp_4').style['mix-blend-mode'] = 'normal';
+        var layer_Ontwerp_4 = new L.geoJson(json_Ontwerp_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Ontwerp_4',
+            layerName: 'layer_Ontwerp_4',
+            pane: 'pane_Ontwerp_4',
+            onEachFeature: pop_Ontwerp_4,
+            style: style_Ontwerp_4_0,
+        });
+        bounds_group.addLayer(layer_Ontwerp_4);
+        map.addLayer(layer_Ontwerp_4);
+        var overlaysTree = [
+            {label: 'Ontwerp<br /><table><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Aanlegfietspad0.png" /></td><td>Aanleg fietspad</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Fietsstraatinasfalt1.png" /></td><td>Fietsstraat in asfalt</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Fietsstraatinklinkers2.png" /></td><td>Fietsstraat in klinkers</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Instellenschoolzone3.png" /></td><td>Instellen schoolzone</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Trottoirverwijderen4.png" /></td><td>Trottoir verwijderen</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Verwijderenparkeerstrook5.png" /></td><td>Verwijderen parkeerstrook</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Vervangenverharding6.png" /></td><td>Vervangen verharding</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_GeenmaatregelOutofScope7.png" /></td><td>Geen maatregel / Out of Scope</td></tr></table>', layer: layer_Ontwerp_4},
+            {label: 'Wegbreedte<br /><table><tr><td style="text-align: center;"><img src="legend/Wegbreedte_3_Nietgeclassificeerd0.png" /></td><td>Niet geclassificeerd</td></tr><tr><td style="text-align: center;"><img src="legend/Wegbreedte_3_45meter1.png" /></td><td>< 4,5 meter</td></tr><tr><td style="text-align: center;"><img src="legend/Wegbreedte_3_4555meter2.png" /></td><td>4,5 - 5,5 meter</td></tr><tr><td style="text-align: center;"><img src="legend/Wegbreedte_3_55meter3.png" /></td><td>> 5,5 meter</td></tr></table>', layer: layer_Wegbreedte_3},
+            {label: 'Wegen<br /><table><tr><td style="text-align: center;"><img src="legend/Wegen_2_Fietspad0.png" /></td><td>Fietspad</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Parkeerstrook1.png" /></td><td>Parkeerstrook</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Parkeerterrein2.png" /></td><td>Parkeerterrein</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Parkeervak3.png" /></td><td>Parkeervak</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Rijbaan4.png" /></td><td>Rijbaan</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Verkeersdrempel5.png" /></td><td>Verkeersdrempel</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Voetgangersgebied6.png" /></td><td>Voetgangersgebied</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Voetpad7.png" /></td><td>Voetpad</td></tr></table>', layer: layer_Wegen_2},
+            {label: "Google Satellite", layer: layer_GoogleSatellite_1, radioGroup: 'bm' },
+            {label: "CartoDb Positron", layer: layer_CartoDbPositron_0, radioGroup: 'bm' },]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true,
+        });
+        lay.addTo(map);
+        setBounds();
+        </script>        
+    </body>
+</html>
