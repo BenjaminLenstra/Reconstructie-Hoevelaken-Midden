@@ -65,7 +65,7 @@
         }
         var map = L.map('map', {
             zoomControl:false, maxZoom:28, minZoom:1
-        }).fitBounds([[52.16774334106727,5.454216362499663],[52.17125253618115,5.465053157844199]]);
+        }).fitBounds([[52.16507728509382,5.469720269073463],[52.17912092951435,5.508517670683835]]);
         var hash = new L.Hash(map);
         map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
@@ -693,6 +693,9 @@
                         <td class="visible-with-data" id="beeld" colspan="2"><strong>beeld</strong><br />' + (feature.properties['beeld'] !== null ? '<img src="images/' + String(feature.properties['beeld']).replace(/[\\/:]/g, '_').trim().replace(/'/g, '\'').replace(/"/g, '&quot;') + '">' : '') + '</td>\
                     </tr>\
                     <tr>\
+                        <td colspan="2">' + (feature.properties['field_16'] !== null ? '<img src="images/' + String(feature.properties['field_16']).replace(/[\\/:]/g, '_').trim().replace(/'/g, '\'').replace(/"/g, '&quot;') + '">' : '') + '</td>\
+                    </tr>\
+                    <tr>\
                         <td class="visible-with-data" id="wegfunctie" colspan="2"><strong>wegfunctie</strong><br />' + (feature.properties['wegfunctie'] !== null ? autolinker.link(String(feature.properties['wegfunctie']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
@@ -738,7 +741,7 @@
                 interactive: true,
             }
                     break;
-                case 'Fietsstraat in klinkers':
+                case 'Fietsstraat in asfalt; rabatstrook in klinkers':
                     return {
                 pane: 'pane_Ontwerp_4',
                 opacity: 1,
@@ -985,7 +988,7 @@
         var overlaysTree = [
             {label: '<img src="legend/Gebruiksaanwijzing_6.png" /> Gebruiksaanwijzing', layer: layer_Gebruiksaanwijzing_6},
             {label: '<img src="legend/Animatie_5.png" /> Animatie', layer: layer_Animatie_5},
-            {label: 'Ontwerp<br /><table><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Aanlegfietspad0.png" /></td><td>Aanleg fietspad</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Fietsstraatinasfalt1.png" /></td><td>Fietsstraat in asfalt</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Fietsstraatinklinkers2.png" /></td><td>Fietsstraat in klinkers</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Instellenschoolzone3.png" /></td><td>Instellen schoolzone</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Trottoirverwijderen4.png" /></td><td>Trottoir verwijderen</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Verwijderenparkeerstrook5.png" /></td><td>Verwijderen parkeerstrook</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Vervangenverharding6.png" /></td><td>Vervangen verharding</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_GeenmaatregelOutofScope7.png" /></td><td>Geen maatregel / Out of Scope</td></tr></table>', layer: layer_Ontwerp_4},
+            {label: 'Ontwerp<br /><table><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Aanlegfietspad0.png" /></td><td>Aanleg fietspad</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Fietsstraatinasfalt1.png" /></td><td>Fietsstraat in asfalt</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Fietsstraatinasfaltrabatstrookinklinkers2.png" /></td><td>Fietsstraat in asfalt; rabatstrook in klinkers</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Instellenschoolzone3.png" /></td><td>Instellen schoolzone</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Trottoirverwijderen4.png" /></td><td>Trottoir verwijderen</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Verwijderenparkeerstrook5.png" /></td><td>Verwijderen parkeerstrook</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_Vervangenverharding6.png" /></td><td>Vervangen verharding</td></tr><tr><td style="text-align: center;"><img src="legend/Ontwerp_4_GeenmaatregelBuitendescope7.png" /></td><td>Geen maatregel / Buiten de scope</td></tr></table>', layer: layer_Ontwerp_4},
             {label: 'Groen<br /><table><tr><td style="text-align: center;"><img src="legend/Groen_3_Berm0.png" /></td><td>Berm</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Beek1.png" /></td><td>Beek</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Bloemrijkgras2.png" /></td><td>Bloemrijk gras</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Blokhaag3.png" /></td><td>Blokhaag</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Bodembedekkers4.png" /></td><td>Bodembedekkers</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Bosplantsoen5.png" /></td><td>Bosplantsoen</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Fijnesierheester6.png" /></td><td>Fijne sierheester</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Gazon7.png" /></td><td>Gazon</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Greppel8.png" /></td><td>Greppel</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Hondenuitlaatplaats9.png" /></td><td>Hondenuitlaatplaats</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Natuurvriendelijkeoever10.png" /></td><td>Natuurvriendelijke oever</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Schoolplein11.png" /></td><td>Schoolplein</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Sloot12.png" /></td><td>Sloot</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Sporthal13.png" /></td><td>Sporthal</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Struikrozen14.png" /></td><td>Struikrozen</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Vijver15.png" /></td><td>Vijver</td></tr><tr><td style="text-align: center;"><img src="legend/Groen_3_Waterloop16.png" /></td><td>Waterloop</td></tr></table>', layer: layer_Groen_3},
             {label: 'Wegen<br /><table><tr><td style="text-align: center;"><img src="legend/Wegen_2_Fietspad0.png" /></td><td>Fietspad</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Parkeerstrook1.png" /></td><td>Parkeerstrook</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Parkeerterrein2.png" /></td><td>Parkeerterrein</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Parkeervak3.png" /></td><td>Parkeervak</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Rijbaan4.png" /></td><td>Rijbaan</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Verkeersdrempel5.png" /></td><td>Verkeersdrempel</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Voetgangersgebied6.png" /></td><td>Voetgangersgebied</td></tr><tr><td style="text-align: center;"><img src="legend/Wegen_2_Voetpad7.png" /></td><td>Voetpad</td></tr></table>', layer: layer_Wegen_2},
             {label: "Basemap - CartoDb Positron", layer: layer_BasemapCartoDbPositron_1, radioGroup: 'bm' },
@@ -1159,13 +1162,14 @@
             document.getElementById("menu").appendChild(div_maatregel);
             sel_maatregel = document.createElement('select');
             sel_maatregel.multiple = true;
-            sel_maatregel.size = 8;
+            sel_maatregel.size = 9;
             sel_maatregel.id = "sel_maatregel";
             var maatregel_options_str = "<option value='' unselected></option>";
             sel_maatregel.onchange = function(){filterFunc()};
             maatregel_options_str  += '<option value="NULL">NULL</option>';
             maatregel_options_str  += '<option value="Aanleg fietspad">Aanleg fietspad</option>';
             maatregel_options_str  += '<option value="Fietsstraat in asfalt">Fietsstraat in asfalt</option>';
+            maatregel_options_str  += '<option value="Fietsstraat in asfalt; rabatstrook in klinkers">Fietsstraat in asfalt; rabatstrook in klinkers</option>';
             maatregel_options_str  += '<option value="Fietsstraat in klinkers">Fietsstraat in klinkers</option>';
             maatregel_options_str  += '<option value="Instellen schoolzone">Instellen schoolzone</option>';
             maatregel_options_str  += '<option value="Trottoir verwijderen">Trottoir verwijderen</option>';
