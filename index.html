@@ -10,6 +10,8 @@
         <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
         <link rel="stylesheet" href="css/qgis2web.css">
         <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/filter.css">
+<link rel="stylesheet" href="css/nouislider.min.css">
         <link rel="stylesheet" href="css/leaflet.photon.css">
         <link rel="stylesheet" href="css/leaflet-measure.css">
         <style>
@@ -37,6 +39,9 @@
         <script src="js/labels.js"></script>
         <script src="js/leaflet.photon.js"></script>
         <script src="js/leaflet-measure.js"></script>
+        <script src="js/tailDT.js"></script>
+<script src="js/nouislider.min.js"></script>
+<script src="js/wNumb.js"></script>
         <script src="data/Wegen_2.js"></script>
         <script src="data/Groen_3.js"></script>
         <script src="data/Ontwerp_4.js"></script>
@@ -996,6 +1001,198 @@
         });
         lay.addTo(map);
         setBounds();
+        var mapDiv = document.getElementById('map');
+        var row = document.createElement('div');
+        row.className="row";
+        row.id="all";
+        row.style.height = "100%";
+        var col1 = document.createElement('div');
+        col1.className="col9";
+        col1.id = "mapWindow";
+        col1.style.height = "99%";
+        col1.style.width = "80%";
+        col1.style.display = "inline-block";
+        var col2 = document.createElement('div');
+        col2.className="col3";
+        col2.id = "menu";
+        col2.style.display = "inline-block";
+        mapDiv.parentNode.insertBefore(row, mapDiv);
+        document.getElementById("all").appendChild(col1);
+        document.getElementById("all").appendChild(col2);
+        col1.appendChild(mapDiv)
+        var Filters = {"maatregel": "str","onderverdeling": "str"};
+        function filterFunc() {
+          map.eachLayer(function(lyr){
+          if ("options" in lyr && "dataVar" in lyr["options"]){
+            features = this[lyr["options"]["dataVar"]].features.slice(0);
+            try{
+              for (key in Filters){
+                keyS = key.replace(/[^a-zA-Z0-9_]/g, "")
+                if (Filters[key] == "str" || Filters[key] == "bool"){
+                  var selection = [];
+                  var options = document.getElementById("sel_" + keyS).options
+                  for (var i=0; i < options.length; i++) {
+                    if (options[i].selected) selection.push(options[i].value);
+                  }
+                    try{
+                      if (key in features[0].properties){
+                        for (i = features.length - 1;
+                          i >= 0; --i){
+                          if (selection.indexOf(
+                          features[i].properties[key])<0
+                          && selection.length>0) {
+                          features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                  }
+                }
+                if (Filters[key] == "int"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (parseInt(features[i].properties[key])
+                          < sliderVals[0]
+                          || parseInt(features[i].properties[key])
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "real"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (features[i].properties[key]
+                          < sliderVals[0]
+                          || features[i].properties[key]
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "date"
+                  || Filters[key] == "datetime"
+                  || Filters[key] == "time"){
+                  try{
+                    if (key in features[0].properties){
+                      HTMLkey = key.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, '');
+                      startdate = document.getElementById("dat_" +
+                        HTMLkey + "_date1").value.replace(" ", "T");
+                      enddate = document.getElementById("dat_" +
+                        HTMLkey + "_date2").value.replace(" ", "T");
+                      for (i = features.length - 1; i >= 0; --i){
+                        if (features[i].properties[key] < startdate
+                          || features[i].properties[key] > enddate){
+                          features.splice(i,1);
+                        }
+                      }
+                    }
+                  } catch(err){
+                  }
+                }
+              }
+            } catch(err){
+            }
+          this[lyr["options"]["layerName"]].clearLayers();
+          this[lyr["options"]["layerName"]].addData(features);
+          }
+          })
+        }
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_maatregel = document.createElement('div');
+            div_maatregel.id = "div_maatregel";
+            div_maatregel.className= "filterselect";
+            document.getElementById("menu").appendChild(div_maatregel);
+            sel_maatregel = document.createElement('select');
+            sel_maatregel.multiple = true;
+            sel_maatregel.size = 8;
+            sel_maatregel.id = "sel_maatregel";
+            var maatregel_options_str = "<option value='' unselected></option>";
+            sel_maatregel.onchange = function(){filterFunc()};
+            maatregel_options_str  += '<option value="NULL">NULL</option>';
+            maatregel_options_str  += '<option value="Aanleg fietspad">Aanleg fietspad</option>';
+            maatregel_options_str  += '<option value="Fietsstraat in asfalt">Fietsstraat in asfalt</option>';
+            maatregel_options_str  += '<option value="Fietsstraat in klinkers">Fietsstraat in klinkers</option>';
+            maatregel_options_str  += '<option value="Instellen schoolzone">Instellen schoolzone</option>';
+            maatregel_options_str  += '<option value="Trottoir verwijderen">Trottoir verwijderen</option>';
+            maatregel_options_str  += '<option value="Vervangen verharding">Vervangen verharding</option>';
+            maatregel_options_str  += '<option value="Verwijderen parkeerstrook">Verwijderen parkeerstrook</option>';
+            sel_maatregel.innerHTML = maatregel_options_str;
+            div_maatregel.appendChild(sel_maatregel);
+            var lab_maatregel = document.createElement('div');
+            lab_maatregel.innerHTML = 'maatregel';
+            lab_maatregel.className = 'filterlabel';
+            div_maatregel.appendChild(lab_maatregel);
+            var reset_maatregel = document.createElement('div');
+            reset_maatregel.innerHTML = 'clear filter';
+            reset_maatregel.className = 'filterlabel';
+            reset_maatregel.onclick = function() {
+                var options = document.getElementById("sel_maatregel").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_maatregel.appendChild(reset_maatregel);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_onderverdeling = document.createElement('div');
+            div_onderverdeling.id = "div_onderverdeling";
+            div_onderverdeling.className= "filterselect";
+            document.getElementById("menu").appendChild(div_onderverdeling);
+            sel_onderverdeling = document.createElement('select');
+            sel_onderverdeling.multiple = true;
+            sel_onderverdeling.size = 10;
+            sel_onderverdeling.id = "sel_onderverdeling";
+            var onderverdeling_options_str = "<option value='' unselected></option>";
+            sel_onderverdeling.onchange = function(){filterFunc()};
+            onderverdeling_options_str  += '<option value="Beek">Beek</option>';
+            onderverdeling_options_str  += '<option value="Berm">Berm</option>';
+            onderverdeling_options_str  += '<option value="Bloemrijk gras">Bloemrijk gras</option>';
+            onderverdeling_options_str  += '<option value="Blokhaag">Blokhaag</option>';
+            onderverdeling_options_str  += '<option value="Bodembedekkers">Bodembedekkers</option>';
+            onderverdeling_options_str  += '<option value="Bosplantsoen">Bosplantsoen</option>';
+            onderverdeling_options_str  += '<option value="Fijne sierheester">Fijne sierheester</option>';
+            onderverdeling_options_str  += '<option value="Gazon">Gazon</option>';
+            onderverdeling_options_str  += '<option value="Greppel">Greppel</option>';
+            onderverdeling_options_str  += '<option value="Hondenuitlaatplaats">Hondenuitlaatplaats</option>';
+            onderverdeling_options_str  += '<option value="Natuurvriendelijke oever">Natuurvriendelijke oever</option>';
+            onderverdeling_options_str  += '<option value="Schoolplein">Schoolplein</option>';
+            onderverdeling_options_str  += '<option value="Sloot">Sloot</option>';
+            onderverdeling_options_str  += '<option value="Sporthal">Sporthal</option>';
+            onderverdeling_options_str  += '<option value="Struikrozen">Struikrozen</option>';
+            onderverdeling_options_str  += '<option value="Vijver">Vijver</option>';
+            onderverdeling_options_str  += '<option value="Waterloop">Waterloop</option>';
+            sel_onderverdeling.innerHTML = onderverdeling_options_str;
+            div_onderverdeling.appendChild(sel_onderverdeling);
+            var lab_onderverdeling = document.createElement('div');
+            lab_onderverdeling.innerHTML = 'onderverdeling';
+            lab_onderverdeling.className = 'filterlabel';
+            div_onderverdeling.appendChild(lab_onderverdeling);
+            var reset_onderverdeling = document.createElement('div');
+            reset_onderverdeling.innerHTML = 'clear filter';
+            reset_onderverdeling.className = 'filterlabel';
+            reset_onderverdeling.onclick = function() {
+                var options = document.getElementById("sel_onderverdeling").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_onderverdeling.appendChild(reset_onderverdeling);
         </script>        
     </body>
 </html>
