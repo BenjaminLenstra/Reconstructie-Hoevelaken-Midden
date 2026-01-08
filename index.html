@@ -66,7 +66,7 @@
         }
         var map = L.map('map', {
             zoomControl:false, maxZoom:28, minZoom:1
-        }).fitBounds([[52.17220125580359,5.44701877003047],[52.17680321184063,5.474994817785917]]);
+        }).fitBounds([[52.16702706104341,5.448554401043709],[52.176238331275144,5.5045060708969284]]);
         var hash = new L.Hash(map);
         map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
@@ -1159,7 +1159,7 @@
         document.getElementById("all").appendChild(col1);
         document.getElementById("all").appendChild(col2);
         col1.appendChild(mapDiv)
-        var Filters = {"thema": "str","gebruiksfunctie": "str","maatregel": "str"};
+        var Filters = {"gebruiksfunctie": "str","thema": "str","maatregel": "str"};
         function filterFunc() {
           map.eachLayer(function(lyr){
           if ("options" in lyr && "dataVar" in lyr["options"]){
@@ -1251,38 +1251,6 @@
         }
             document.getElementById("menu").appendChild(
                 document.createElement("div"));
-            var div_thema = document.createElement('div');
-            div_thema.id = "div_thema";
-            div_thema.className= "filterselect";
-            document.getElementById("menu").appendChild(div_thema);
-            sel_thema = document.createElement('select');
-            sel_thema.multiple = true;
-            sel_thema.size = 3;
-            sel_thema.id = "sel_thema";
-            var thema_options_str = "<option value='' unselected></option>";
-            sel_thema.onchange = function(){filterFunc()};
-            thema_options_str  += '<option value="Biodiversiteit">Biodiversiteit</option>';
-            thema_options_str  += '<option value="Verkeer">Verkeer</option>';
-            thema_options_str  += '<option value="Water">Water</option>';
-            sel_thema.innerHTML = thema_options_str;
-            div_thema.appendChild(sel_thema);
-            var lab_thema = document.createElement('div');
-            lab_thema.innerHTML = 'thema';
-            lab_thema.className = 'filterlabel';
-            div_thema.appendChild(lab_thema);
-            var reset_thema = document.createElement('div');
-            reset_thema.innerHTML = 'clear filter';
-            reset_thema.className = 'filterlabel';
-            reset_thema.onclick = function() {
-                var options = document.getElementById("sel_thema").options;
-                for (var i=0; i < options.length; i++) {
-                    options[i].selected = false;
-                }
-                filterFunc();
-            };
-            div_thema.appendChild(reset_thema);
-            document.getElementById("menu").appendChild(
-                document.createElement("div"));
             var div_gebruiksfunctie = document.createElement('div');
             div_gebruiksfunctie.id = "div_gebruiksfunctie";
             div_gebruiksfunctie.className= "filterselect";
@@ -1323,6 +1291,38 @@
                 filterFunc();
             };
             div_gebruiksfunctie.appendChild(reset_gebruiksfunctie);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_thema = document.createElement('div');
+            div_thema.id = "div_thema";
+            div_thema.className= "filterselect";
+            document.getElementById("menu").appendChild(div_thema);
+            sel_thema = document.createElement('select');
+            sel_thema.multiple = true;
+            sel_thema.size = 3;
+            sel_thema.id = "sel_thema";
+            var thema_options_str = "<option value='' unselected></option>";
+            sel_thema.onchange = function(){filterFunc()};
+            thema_options_str  += '<option value="Biodiversiteit">Biodiversiteit</option>';
+            thema_options_str  += '<option value="Verkeer">Verkeer</option>';
+            thema_options_str  += '<option value="Water">Water</option>';
+            sel_thema.innerHTML = thema_options_str;
+            div_thema.appendChild(sel_thema);
+            var lab_thema = document.createElement('div');
+            lab_thema.innerHTML = 'thema';
+            lab_thema.className = 'filterlabel';
+            div_thema.appendChild(lab_thema);
+            var reset_thema = document.createElement('div');
+            reset_thema.innerHTML = 'clear filter';
+            reset_thema.className = 'filterlabel';
+            reset_thema.onclick = function() {
+                var options = document.getElementById("sel_thema").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_thema.appendChild(reset_thema);
             document.getElementById("menu").appendChild(
                 document.createElement("div"));
             var div_maatregel = document.createElement('div');
