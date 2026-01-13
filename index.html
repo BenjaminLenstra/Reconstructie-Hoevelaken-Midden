@@ -66,7 +66,7 @@
         }
         var map = L.map('map', {
             zoomControl:false, maxZoom:28, minZoom:1
-        }).fitBounds([[52.16377055724277,5.454627926243858],[52.17520124766246,5.474611612610097]]);
+        }).fitBounds([[52.16730722583064,5.44206743499661],[52.177668309147045,5.505013583390415]]);
         var hash = new L.Hash(map);
         map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
@@ -1168,7 +1168,7 @@
         document.getElementById("all").appendChild(col1);
         document.getElementById("all").appendChild(col2);
         col1.appendChild(mapDiv)
-        var Filters = {"Gebruiksfunctie": "str","Maatregel": "str","Thema": "str"};
+        var Filters = {"Gebruiksfunctie": "str","Type materiaal": "str","Thema": "str"};
         function filterFunc() {
           map.eachLayer(function(lyr){
           if ("options" in lyr && "dataVar" in lyr["options"]){
@@ -1301,42 +1301,38 @@
             div_Gebruiksfunctie.appendChild(reset_Gebruiksfunctie);
             document.getElementById("menu").appendChild(
                 document.createElement("div"));
-            var div_Maatregel = document.createElement('div');
-            div_Maatregel.id = "div_Maatregel";
-            div_Maatregel.className= "filterselect";
-            document.getElementById("menu").appendChild(div_Maatregel);
-            sel_Maatregel = document.createElement('select');
-            sel_Maatregel.multiple = true;
-            sel_Maatregel.size = 9;
-            sel_Maatregel.id = "sel_Maatregel";
-            var Maatregel_options_str = "<option value='' unselected></option>";
-            sel_Maatregel.onchange = function(){filterFunc()};
-            Maatregel_options_str  += '<option value="NULL">NULL</option>';
-            Maatregel_options_str  += '<option value="Aanleg fietspad">Aanleg fietspad</option>';
-            Maatregel_options_str  += '<option value="Fietsstraat in asfalt">Fietsstraat in asfalt</option>';
-            Maatregel_options_str  += '<option value="Fietsstraat in asfalt; middenstrook met afwijkende toplaag">Fietsstraat in asfalt; middenstrook met afwijkende toplaag</option>';
-            Maatregel_options_str  += '<option value="Instellen schoolzone">Instellen schoolzone</option>';
-            Maatregel_options_str  += '<option value="Nieuwe inrichting hofje">Nieuwe inrichting hofje</option>';
-            Maatregel_options_str  += '<option value="Trottoir verwijderen">Trottoir verwijderen</option>';
-            Maatregel_options_str  += '<option value="Vervangen verharding">Vervangen verharding</option>';
-            Maatregel_options_str  += '<option value="Verwijderen parkeerstrook">Verwijderen parkeerstrook</option>';
-            sel_Maatregel.innerHTML = Maatregel_options_str;
-            div_Maatregel.appendChild(sel_Maatregel);
-            var lab_Maatregel = document.createElement('div');
-            lab_Maatregel.innerHTML = 'Maatregel';
-            lab_Maatregel.className = 'filterlabel';
-            div_Maatregel.appendChild(lab_Maatregel);
-            var reset_Maatregel = document.createElement('div');
-            reset_Maatregel.innerHTML = 'clear filter';
-            reset_Maatregel.className = 'filterlabel';
-            reset_Maatregel.onclick = function() {
-                var options = document.getElementById("sel_Maatregel").options;
+            var div_Typemateriaal = document.createElement('div');
+            div_Typemateriaal.id = "div_Typemateriaal";
+            div_Typemateriaal.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Typemateriaal);
+            sel_Typemateriaal = document.createElement('select');
+            sel_Typemateriaal.multiple = true;
+            sel_Typemateriaal.size = 5;
+            sel_Typemateriaal.id = "sel_Typemateriaal";
+            var Typemateriaal_options_str = "<option value='' unselected></option>";
+            sel_Typemateriaal.onchange = function(){filterFunc()};
+            Typemateriaal_options_str  += '<option value="NULL">NULL</option>';
+            Typemateriaal_options_str  += '<option value="Asfaltverharding">Asfaltverharding</option>';
+            Typemateriaal_options_str  += '<option value="Betonverharding">Betonverharding</option>';
+            Typemateriaal_options_str  += '<option value="Elementenverharding">Elementenverharding</option>';
+            Typemateriaal_options_str  += '<option value="Halfverharding">Halfverharding</option>';
+            sel_Typemateriaal.innerHTML = Typemateriaal_options_str;
+            div_Typemateriaal.appendChild(sel_Typemateriaal);
+            var lab_Typemateriaal = document.createElement('div');
+            lab_Typemateriaal.innerHTML = 'Type materiaal';
+            lab_Typemateriaal.className = 'filterlabel';
+            div_Typemateriaal.appendChild(lab_Typemateriaal);
+            var reset_Typemateriaal = document.createElement('div');
+            reset_Typemateriaal.innerHTML = 'clear filter';
+            reset_Typemateriaal.className = 'filterlabel';
+            reset_Typemateriaal.onclick = function() {
+                var options = document.getElementById("sel_Typemateriaal").options;
                 for (var i=0; i < options.length; i++) {
                     options[i].selected = false;
                 }
                 filterFunc();
             };
-            div_Maatregel.appendChild(reset_Maatregel);
+            div_Typemateriaal.appendChild(reset_Typemateriaal);
             document.getElementById("menu").appendChild(
                 document.createElement("div"));
             var div_Thema = document.createElement('div');
