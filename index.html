@@ -10,6 +10,8 @@
         <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
         <link rel="stylesheet" href="css/qgis2web.css">
         <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/filter.css">
+<link rel="stylesheet" href="css/nouislider.min.css">
         <link rel="stylesheet" href="css/leaflet.photon.css">
         <link rel="stylesheet" href="css/leaflet-measure.css">
         <style>
@@ -23,18 +25,7 @@
         <title>Ontwerp Reconstructie Hoevelaken Midden</title>
     </head>
     <body>
-	<!-- Download-balk boven de kaart -->
-	<div id="download-bar"
-     style="padding:12px; background:#f6f8fa; border-bottom:1px solid #ddd; text-align:center; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; position:relative; z-index:1000;">
-  📄 
-  <a href="docs/Ondersteunend_Rapport.pdf"
-     download
-     target="_blank"
-     style="color:#0b57d0; text-decoration:none; font-weight:600;">
-     Download Ondersteunend Rapport (PDF)
-  </a>
-</div>
-	<div id="map">
+        <div id="map">
         </div>
         <script src="js/qgis2web_expressions.js"></script>
         <script src="js/leaflet.js"></script>
@@ -48,6 +39,9 @@
         <script src="js/labels.js"></script>
         <script src="js/leaflet.photon.js"></script>
         <script src="js/leaflet-measure.js"></script>
+        <script src="js/tailDT.js"></script>
+<script src="js/nouislider.min.js"></script>
+<script src="js/wNumb.js"></script>
         <script src="data/Wegen_2.js"></script>
         <script src="data/Gebruiksfunctie_3.js"></script>
         <script src="data/Ontwerp_4.js"></script>
@@ -144,46 +138,7 @@
             return this._div;
         };
         title.update = function () {
-            this._div.innerHTML = '<h2>Ontwerp Reconstructie Hoevelaken 
-
-script>
-  // ====== Download-knop als Leaflet control (rechtsboven) ======
-  (function () {
-    // Custom control
-    var DownloadControl = L.Control.extend({
-      options: { position: 'topright' },
-      onAdd: function (map) {
-        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-        container.style.background = '#fff';
-        container.style.borderRadius = '4px';
-        container.style.boxShadow = '0 1px 4px rgba(0,0,0,0.2)';
-        container.style.overflow = 'hidden';
-
-        var link = L.DomUtil.create('a', '', container);
-        link.href = 'docs/Ondersteunend_Rapport.pdf';
-        link.target = '_blank';
-        link.download = '';
-        link.innerHTML = 'PDF';
-        link.title = 'Download Ondersteunend Rapport';
-        link.style.display = 'inline-block';
-        link.style.padding = '6px 10px';
-        link.style.textDecoration = 'none';
-        link.style.color = '#0b57d0';
-        link.style.fontWeight = '600';
-
-        // Voorkom dat de kaart gaat pannen tijdens klikken op de knop
-        L.DomEvent.disableClickPropagation(container);
-        L.DomEvent.on(container, 'mousewheel', L.DomEvent.stop);
-        return container;
-      }
-    });
-
-    // Control toevoegen aan de kaart
-    map.addControl(new DownloadControl());
-  })();
-</script>
-``
-Midden</h2>';
+            this._div.innerHTML = '<h2>Ontwerp Reconstructie Hoevelaken Midden</h2>';
         };
         title.addTo(map);
         var abstract = new L.Control({'position':'topright'});
@@ -1098,9 +1053,6 @@ Midden</h2>';
                     <tr>\
                         <td class="visible-with-data" id="Overig" colspan="2"><strong>Overig</strong><br />' + (feature.properties['Overig'] !== null ? autolinker.link(String(feature.properties['Overig']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
                     </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['TEST'] !== null ? autolinker.link(String(feature.properties['TEST']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
                 </table>';
             var content = removeEmptyRowsFromPopupContent(popupContent, feature);
 			layer.on('popupopen', function(e) {
@@ -1208,59 +1160,6 @@ Midden</h2>';
         });
         bounds_group.addLayer(layer_Animatie_7);
         map.addLayer(layer_Animatie_7);
-        const url = {"Nominatim OSM": "https://nominatim.openstreetmap.org/search?format=geojson&addressdetails=1&",
-        "France BAN": "https://api-adresse.data.gouv.fr/search/?"}
-        var photonControl = L.control.photon({
-            url: url["Nominatim OSM"],
-            feedbackLabel: '',
-            position: 'topleft',
-            includePosition: true,
-            initial: true,
-            // resultsHandler: myHandler,
-        }).addTo(map);
-        photonControl._container.childNodes[0].style.borderRadius="10px"
-        // Create a variable to store the geoJSON data
-        var x = null;
-        // Create a variable to store the marker
-        var marker = null;
-        // Add an event listener to the Photon control to create a marker from the returned geoJSON data
-        var z = null;
-        photonControl.on('selected', function(e) {
-            console.log(photonControl.search.resultsContainer);
-            if (x != null) {
-                map.removeLayer(obj3.marker);
-                map.removeLayer(x);
-            }
-            obj2.gcd = e.choice;
-            x = L.geoJSON(obj2.gcd).addTo(map);
-            var label = typeof obj2.gcd.properties.label === 'undefined' ? obj2.gcd.properties.display_name : obj2.gcd.properties.label;
-            obj3.marker = L.marker(x.getLayers()[0].getLatLng()).bindPopup(label).addTo(map);
-            map.setView(x.getLayers()[0].getLatLng(), 17);
-            z = typeof e.choice.properties.label === 'undefined'? e.choice.properties.display_name : e.choice.properties.label;
-            console.log(e);
-            e.target.input.value = z;
-        });
-        var search = document.getElementsByClassName("leaflet-photon leaflet-control")[0];
-        search.classList.add("leaflet-control-search")
-        search.style.display = "flex";
-        search.style.backgroundColor="rgba(255,255,255,0.5)" 
-
-        // Create the new button element
-        var button = document.createElement("div");
-        button.id = "gcd-button-control";
-        button.className = "gcd-gl-btn fa fa-search search-button";
-
-        // Insert the button at the beginning of the search control
-        search.insertBefore(button, search.firstChild);
-        last = search.lastChild;
-        last.style.display = "none";
-        button.addEventListener("click", function (e) {
-            if (last.style.display === "none") {
-                last.style.display = "block";
-            } else {
-                last.style.display = "none";
-            }
-        });
         var overlaysTree = [
             {label: '<img src="legend/Animatie_7.png" /> Animatie', layer: layer_Animatie_7},
             {label: '<img src="legend/Gebruiksaanwijzing_6.png" /> Gebruiksaanwijzing', layer: layer_Gebruiksaanwijzing_6},
@@ -1281,6 +1180,226 @@ Midden</h2>';
         });
         lay.addTo(map);
         setBounds();
+        var mapDiv = document.getElementById('map');
+        var row = document.createElement('div');
+        row.className="row";
+        row.id="all";
+        row.style.height = "100%";
+        var col1 = document.createElement('div');
+        col1.className="col9";
+        col1.id = "mapWindow";
+        col1.style.height = "99%";
+        col1.style.width = "80%";
+        col1.style.display = "inline-block";
+        var col2 = document.createElement('div');
+        col2.className="col3";
+        col2.id = "menu";
+        col2.style.display = "inline-block";
+        mapDiv.parentNode.insertBefore(row, mapDiv);
+        document.getElementById("all").appendChild(col1);
+        document.getElementById("all").appendChild(col2);
+        col1.appendChild(mapDiv)
+        var Filters = {"Maatregel": "str","Thema": "str","Gebruiksfunctie": "str"};
+        function filterFunc() {
+          map.eachLayer(function(lyr){
+          if ("options" in lyr && "dataVar" in lyr["options"]){
+            features = this[lyr["options"]["dataVar"]].features.slice(0);
+            try{
+              for (key in Filters){
+                keyS = key.replace(/[^a-zA-Z0-9_]/g, "")
+                if (Filters[key] == "str" || Filters[key] == "bool"){
+                  var selection = [];
+                  var options = document.getElementById("sel_" + keyS).options
+                  for (var i=0; i < options.length; i++) {
+                    if (options[i].selected) selection.push(options[i].value);
+                  }
+                    try{
+                      if (key in features[0].properties){
+                        for (i = features.length - 1;
+                          i >= 0; --i){
+                          if (selection.indexOf(
+                          features[i].properties[key])<0
+                          && selection.length>0) {
+                          features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                  }
+                }
+                if (Filters[key] == "int"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (parseInt(features[i].properties[key])
+                          < sliderVals[0]
+                          || parseInt(features[i].properties[key])
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "real"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (features[i].properties[key]
+                          < sliderVals[0]
+                          || features[i].properties[key]
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "date"
+                  || Filters[key] == "datetime"
+                  || Filters[key] == "time"){
+                  try{
+                    if (key in features[0].properties){
+                      HTMLkey = key.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, '');
+                      startdate = document.getElementById("dat_" +
+                        HTMLkey + "_date1").value.replace(" ", "T");
+                      enddate = document.getElementById("dat_" +
+                        HTMLkey + "_date2").value.replace(" ", "T");
+                      for (i = features.length - 1; i >= 0; --i){
+                        if (features[i].properties[key] < startdate
+                          || features[i].properties[key] > enddate){
+                          features.splice(i,1);
+                        }
+                      }
+                    }
+                  } catch(err){
+                  }
+                }
+              }
+            } catch(err){
+            }
+          this[lyr["options"]["layerName"]].clearLayers();
+          this[lyr["options"]["layerName"]].addData(features);
+          }
+          })
+        }
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Maatregel = document.createElement('div');
+            div_Maatregel.id = "div_Maatregel";
+            div_Maatregel.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Maatregel);
+            sel_Maatregel = document.createElement('select');
+            sel_Maatregel.multiple = true;
+            sel_Maatregel.size = 9;
+            sel_Maatregel.id = "sel_Maatregel";
+            var Maatregel_options_str = "<option value='' unselected></option>";
+            sel_Maatregel.onchange = function(){filterFunc()};
+            Maatregel_options_str  += '<option value="NULL">NULL</option>';
+            Maatregel_options_str  += '<option value="Aanleg fietspad">Aanleg fietspad</option>';
+            Maatregel_options_str  += '<option value="Fietsstraat in asfalt">Fietsstraat in asfalt</option>';
+            Maatregel_options_str  += '<option value="Fietsstraat in asfalt; middenstrook met afwijkende toplaag">Fietsstraat in asfalt; middenstrook met afwijkende toplaag</option>';
+            Maatregel_options_str  += '<option value="Instellen schoolzone">Instellen schoolzone</option>';
+            Maatregel_options_str  += '<option value="Nieuwe inrichting hofje">Nieuwe inrichting hofje</option>';
+            Maatregel_options_str  += '<option value="Trottoir verwijderen">Trottoir verwijderen</option>';
+            Maatregel_options_str  += '<option value="Vervangen verharding">Vervangen verharding</option>';
+            Maatregel_options_str  += '<option value="Verwijderen parkeerstrook">Verwijderen parkeerstrook</option>';
+            sel_Maatregel.innerHTML = Maatregel_options_str;
+            div_Maatregel.appendChild(sel_Maatregel);
+            var lab_Maatregel = document.createElement('div');
+            lab_Maatregel.innerHTML = 'Maatregel';
+            lab_Maatregel.className = 'filterlabel';
+            div_Maatregel.appendChild(lab_Maatregel);
+            var reset_Maatregel = document.createElement('div');
+            reset_Maatregel.innerHTML = 'clear filter';
+            reset_Maatregel.className = 'filterlabel';
+            reset_Maatregel.onclick = function() {
+                var options = document.getElementById("sel_Maatregel").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Maatregel.appendChild(reset_Maatregel);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Thema = document.createElement('div');
+            div_Thema.id = "div_Thema";
+            div_Thema.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Thema);
+            sel_Thema = document.createElement('select');
+            sel_Thema.multiple = true;
+            sel_Thema.size = 3;
+            sel_Thema.id = "sel_Thema";
+            var Thema_options_str = "<option value='' unselected></option>";
+            sel_Thema.onchange = function(){filterFunc()};
+            Thema_options_str  += '<option value="Biodiversiteit">Biodiversiteit</option>';
+            Thema_options_str  += '<option value="Verkeer">Verkeer</option>';
+            Thema_options_str  += '<option value="Water">Water</option>';
+            sel_Thema.innerHTML = Thema_options_str;
+            div_Thema.appendChild(sel_Thema);
+            var lab_Thema = document.createElement('div');
+            lab_Thema.innerHTML = 'Thema';
+            lab_Thema.className = 'filterlabel';
+            div_Thema.appendChild(lab_Thema);
+            var reset_Thema = document.createElement('div');
+            reset_Thema.innerHTML = 'clear filter';
+            reset_Thema.className = 'filterlabel';
+            reset_Thema.onclick = function() {
+                var options = document.getElementById("sel_Thema").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Thema.appendChild(reset_Thema);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Gebruiksfunctie = document.createElement('div');
+            div_Gebruiksfunctie.id = "div_Gebruiksfunctie";
+            div_Gebruiksfunctie.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Gebruiksfunctie);
+            sel_Gebruiksfunctie = document.createElement('select');
+            sel_Gebruiksfunctie.multiple = true;
+            sel_Gebruiksfunctie.size = 10;
+            sel_Gebruiksfunctie.id = "sel_Gebruiksfunctie";
+            var Gebruiksfunctie_options_str = "<option value='' unselected></option>";
+            sel_Gebruiksfunctie.onchange = function(){filterFunc()};
+            Gebruiksfunctie_options_str  += '<option value="NULL">NULL</option>';
+            Gebruiksfunctie_options_str  += '<option value="Berm">Berm</option>';
+            Gebruiksfunctie_options_str  += '<option value="Bibliotheek ">Bibliotheek </option>';
+            Gebruiksfunctie_options_str  += '<option value="Hondenuitlaatplaats">Hondenuitlaatplaats</option>';
+            Gebruiksfunctie_options_str  += '<option value="Natuurvriendelijke oever">Natuurvriendelijke oever</option>';
+            Gebruiksfunctie_options_str  += '<option value="Schoolplein">Schoolplein</option>';
+            Gebruiksfunctie_options_str  += '<option value="Sloot">Sloot</option>';
+            Gebruiksfunctie_options_str  += '<option value="Speelplaats">Speelplaats</option>';
+            Gebruiksfunctie_options_str  += '<option value="Sporthal ">Sporthal </option>';
+            Gebruiksfunctie_options_str  += '<option value="Trapveld">Trapveld</option>';
+            Gebruiksfunctie_options_str  += '<option value="Vijver">Vijver</option>';
+            Gebruiksfunctie_options_str  += '<option value="Vrije Speelruimte">Vrije Speelruimte</option>';
+            sel_Gebruiksfunctie.innerHTML = Gebruiksfunctie_options_str;
+            div_Gebruiksfunctie.appendChild(sel_Gebruiksfunctie);
+            var lab_Gebruiksfunctie = document.createElement('div');
+            lab_Gebruiksfunctie.innerHTML = 'Gebruiksfunctie';
+            lab_Gebruiksfunctie.className = 'filterlabel';
+            div_Gebruiksfunctie.appendChild(lab_Gebruiksfunctie);
+            var reset_Gebruiksfunctie = document.createElement('div');
+            reset_Gebruiksfunctie.innerHTML = 'clear filter';
+            reset_Gebruiksfunctie.className = 'filterlabel';
+            reset_Gebruiksfunctie.onclick = function() {
+                var options = document.getElementById("sel_Gebruiksfunctie").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Gebruiksfunctie.appendChild(reset_Gebruiksfunctie);
         </script>        
     </body>
 </html>
